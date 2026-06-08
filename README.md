@@ -27,11 +27,15 @@ Les tags suivent la version PDM amont (ex. `1.1.4`, `1.1`, `latest`).
 ```bash
 docker run -d --name pdm \
   -p 8443:8443 \
+  --tmpfs /run:exec,mode=0755 \
   -e PDM_ROOT_PASSWORD=change-me \
   -v pdm-config:/etc/proxmox-datacenter-manager \
   -v pdm-data:/var/lib/proxmox-datacenter-manager \
   ghcr.io/williamboglietti/proxmox-datacenter-manager:latest
 ```
+
+`--tmpfs /run` n'est pas obligatoire mais reproduit le `/run` d'un vrai système
+et évite l'avertissement `shmem is not on tmpfs` côté PDM.
 
 ### Docker Compose
 
@@ -161,11 +165,15 @@ Tags follow the upstream PDM version (e.g. `1.1.4`, `1.1`, `latest`).
 ```bash
 docker run -d --name pdm \
   -p 8443:8443 \
+  --tmpfs /run:exec,mode=0755 \
   -e PDM_ROOT_PASSWORD=change-me \
   -v pdm-config:/etc/proxmox-datacenter-manager \
   -v pdm-data:/var/lib/proxmox-datacenter-manager \
   ghcr.io/williamboglietti/proxmox-datacenter-manager:latest
 ```
+
+`--tmpfs /run` is optional but mirrors a real system's `/run` and avoids PDM's
+`shmem is not on tmpfs` warning.
 
 #### Docker Compose
 
