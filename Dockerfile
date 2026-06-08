@@ -37,14 +37,15 @@ RUN printf '%s\n' \
         'Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg' \
         > /etc/apt/sources.list.d/proxmox.sources
 
-# 4. Installe le méta-paquet orienté conteneur + l'interface web.
+# 4. Installe le méta-paquet orienté conteneur + l'interface web + la doc locale.
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         proxmox-datacenter-manager-container-meta \
-        proxmox-datacenter-manager-ui && \
+        proxmox-datacenter-manager-ui \
+        proxmox-datacenter-manager-docs && \
     # container-meta ajoute le dépôt enterprise : inutile sur une image
     # no-subscription (401 sur apt update) et trompeur — on le retire.
-    # debian.sources : inutile au runtime (aucune MAJ par apt) — TEST de retrait.
+    # debian.sources : inutile au runtime (aucune MAJ par apt).
     rm -f /etc/apt/sources.list.d/pdm-enterprise.sources \
           /etc/apt/sources.list.d/debian.sources && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
