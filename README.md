@@ -105,7 +105,9 @@ et `DOCKERHUB_TOKEN`.
 
 ## Licence
 
-MIT. Basé sur la [documentation officielle Proxmox](https://pdm.proxmox.com/docs/)
+MIT pour les fichiers de packaging de ce dépôt. Les composants Proxmox embarqués
+sont sous AGPL-3.0 — voir le fichier [`NOTICE`](NOTICE) pour le détail des licences
+et des sources. Basé sur la [documentation officielle Proxmox](https://pdm.proxmox.com/docs/)
 et le dépôt de paquets `download.proxmox.com/debian/pdm`. Proxmox® est une marque
 déposée de Proxmox Server Solutions GmbH ; ce projet n'est ni affilié ni approuvé
 par Proxmox.
@@ -217,7 +219,9 @@ repository secrets.
 
 ### License
 
-MIT. Based on the official [Proxmox documentation](https://pdm.proxmox.com/docs/)
+MIT for the packaging files in this repository. The bundled Proxmox components are
+licensed under AGPL-3.0 — see the [`NOTICE`](NOTICE) file for license and source
+details. Based on the official [Proxmox documentation](https://pdm.proxmox.com/docs/)
 and the `download.proxmox.com/debian/pdm` package repository. Proxmox® is a
 registered trademark of Proxmox Server Solutions GmbH; this project is not
 affiliated with or endorsed by Proxmox.

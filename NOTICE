@@ -1,0 +1,41 @@
+Proxmox Datacenter Manager (Docker)
+===================================
+
+This project packages Proxmox Datacenter Manager into a container image. It is an
+unofficial, community-maintained build and is not affiliated with, nor endorsed
+by, Proxmox Server Solutions GmbH.
+
+Packaging files in this repository
+----------------------------------
+The packaging files authored here (Dockerfile, entrypoint.sh,
+disable-subscription-nag.html, docker-compose.yml, workflows) are licensed under
+the MIT License. See the LICENSE file.
+
+Bundled third-party software
+----------------------------
+The container image installs, unmodified, the official Proxmox `.deb` packages
+from http://download.proxmox.com/debian/pdm:
+
+  - proxmox-datacenter-manager-container-meta
+  - proxmox-datacenter-manager-ui
+  - and their dependencies
+
+These packages, and Proxmox Datacenter Manager itself, are
+Copyright (C) Proxmox Server Solutions GmbH and are distributed under the
+GNU Affero General Public License, version 3 (AGPL-3.0).
+See https://www.gnu.org/licenses/agpl-3.0.html
+
+Corresponding source code for these AGPL components is published by Proxmox and
+available at:
+
+  - https://git.proxmox.com/            (upstream source repositories)
+  - http://download.proxmox.com/debian/pdm   (binary and source packages)
+
+No Proxmox source code is modified by this project. The image runs the official
+binaries; only the startup process is adapted for a container environment.
+
+Trademarks
+----------
+"Proxmox" is a registered trademark of Proxmox Server Solutions GmbH. The name is
+used here in a descriptive (nominative) manner only, to indicate the software the
+image provides.
