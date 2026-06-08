@@ -94,12 +94,7 @@ jobs:
             done
           done
 
-      - name: Update Docker Hub description
-        if: github.event_name != 'pull_request'
-        uses: peter-evans/dockerhub-description@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
-          readme-filepath: ./README.md
-          short-description: "Containerized Proxmox Datacenter Manager — amd64, no systemd"
+      # Sync de la description Docker Hub : retiré car le token de push (Read/Write
+      # images) n'a pas le droit de modifier la description (403 Forbidden). Pour
+      # l'activer, ajouter un secret DOCKERHUB_README_TOKEN (PAT « Read, Write &
+      # Delete ») et réintroduire l'étape peter-evans/dockerhub-description.
