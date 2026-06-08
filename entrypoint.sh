@@ -14,14 +14,24 @@ PORT="${PDM_PORT:-8443}"
 
 PRIV_API_PID=""
 API_PID=""
+JOURNALD_PID=""
 
 cleanup() {
     log "Stopping PDM services..."
     [[ -n "$API_PID" ]]      && kill -TERM "$API_PID"      2>/dev/null || true
     [[ -n "$PRIV_API_PID" ]] && kill -TERM "$PRIV_API_PID" 2>/dev/null || true
+    [[ -n "$JOURNALD_PID" ]] && kill -TERM "$JOURNALD_PID" 2>/dev/null || true
     wait 2>/dev/null || true
     log "Services stopped."
     exit 0
+}
+
+# Route la sortie d'un daemon vers stdout (docker logs) ET le journal (onglet UI).
+# stdbuf -oL : line-buffering pour que `docker logs` reste réactif (le pipe tee
+# serait sinon bufferisé par blocs).
+run_logged() {
+    local tag="$1"; shift
+    "$@" > >(stdbuf -oL tee >(systemd-cat -t "$tag")) 2>&1 &
 }
 trap cleanup SIGTERM SIGINT
 
@@ -87,9 +97,22 @@ fi
 log "Running PDM setup..."
 "$BIN_DIR/proxmox-datacenter-privileged-api" setup
 
+# --- 4b. journald standalone (alimente l'onglet « Journal système » de l'UI) ----
+# Sans systemd, aucun journal n'est tenu : journalctl renvoie [] et l'UI affiche
+# « invalid response: [] ». On lance journald seul et on y route les daemons.
+log "Starting systemd-journald..."
+mkdir -p /run/systemd/journal
+/lib/systemd/systemd-journald &
+JOURNALD_PID=$!
+for _ in $(seq 1 10); do
+    [[ -S /run/systemd/journal/socket ]] && break
+    sleep 0.5
+done
+[[ -S /run/systemd/journal/socket ]] || warn "journald socket missing; the System Log tab may stay empty."
+
 # --- 5. Daemon privilégié (root) ----------------------------------------------
 log "Starting proxmox-datacenter-privileged-api..."
-"$BIN_DIR/proxmox-datacenter-privileged-api" &
+run_logged proxmox-datacenter-privileged-api "$BIN_DIR/proxmox-datacenter-privileged-api"
 PRIV_API_PID=$!
 
 log "Waiting for the privileged API socket ($PRIV_SOCK)..."
@@ -101,7 +124,7 @@ done
 
 # --- 6. Daemon API/UI (www-data) ----------------------------------------------
 log "Starting proxmox-datacenter-api (www-data) on port ${PORT}..."
-runuser -u www-data -- "$BIN_DIR/proxmox-datacenter-api" &
+run_logged proxmox-datacenter-api runuser -u www-data -- "$BIN_DIR/proxmox-datacenter-api"
 API_PID=$!
 
 log "PDM is running - UI: https://localhost:${PORT}  (priv=$PRIV_API_PID, api=$API_PID)"
