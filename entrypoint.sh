@@ -107,23 +107,28 @@ else
     remove_html_patch "pdm-disable-updates-tab"
 fi
 
-# --- 4. Génération clés/certs (sous-commande officielle, idempotente) ----------
-# Remplace l'ExecStartPre systemd ; crée les clés d'auth et le certificat si absents.
-log "Running PDM setup..."
-"$BIN_DIR/proxmox-datacenter-privileged-api" setup
-
-# --- 4b. journald standalone (alimente l'onglet « Journal système » de l'UI) ----
+# --- 4. journald standalone (alimente l'onglet « Journal système » de l'UI) ----
 # Sans systemd, aucun journal n'est tenu : journalctl renvoie [] et l'UI affiche
-# « invalid response: [] ». On lance journald seul et on y route les daemons.
+# « invalid response: [] ». Démarré AVANT le setup pour que /dev/log existe
+# (sinon le setup logue « Unable to open syslog »).
 log "Starting systemd-journald..."
 mkdir -p /run/systemd/journal
 /lib/systemd/systemd-journald &
 JOURNALD_PID=$!
 for _ in $(seq 1 10); do
-    [[ -S /run/systemd/journal/socket ]] && break
+    [[ -S /run/systemd/journal/dev-log ]] && break
     sleep 0.5
 done
-[[ -S /run/systemd/journal/socket ]] || warn "journald socket missing; the System Log tab may stay empty."
+if [[ -S /run/systemd/journal/dev-log ]]; then
+    ln -sf /run/systemd/journal/dev-log /dev/log
+else
+    warn "journald socket missing; the System Log tab may stay empty."
+fi
+
+# --- 4b. Génération clés/certs (sous-commande officielle, idempotente) ----------
+# Remplace l'ExecStartPre systemd ; crée les clés d'auth et le certificat si absents.
+log "Running PDM setup..."
+"$BIN_DIR/proxmox-datacenter-privileged-api" setup
 
 # --- 5. Daemon privilégié (root) ----------------------------------------------
 log "Starting proxmox-datacenter-privileged-api..."
