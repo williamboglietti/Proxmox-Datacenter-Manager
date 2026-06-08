@@ -1,0 +1,50 @@
+name: Cleanup Docker Hub tags
+
+# Supprime les tags Docker Hub hors liste à garder. Déclenchement manuel.
+# Utilise le PAT DOCKERHUB_TOKEN (qui doit avoir le droit "Delete").
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep:
+        description: "Tags à conserver (séparés par des espaces)"
+        required: true
+        default: "latest 1.1.4 1.1"
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete stale tags
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
+          REPO: proxmox-datacenter-manager
+          KEEP: ${{ github.event.inputs.keep }}
+        run: |
+          set -euo pipefail
+          TOKEN=$(curl -s -H "Content-Type: application/json" -X POST \
+            -d "{\"username\":\"${DH_USER}\",\"password\":\"${DH_PASS}\"}" \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ] || { echo "::error::Docker Hub login failed"; exit 1; }
+
+          deleted=0; kept=0; page=1
+          while :; do
+            resp=$(curl -s -H "Authorization: JWT $TOKEN" \
+              "https://hub.docker.com/v2/repositories/${DH_USER}/${REPO}/tags/?page_size=100&page=${page}")
+            names=$(echo "$resp" | jq -r '.results[]?.name')
+            [ -z "$names" ] && break
+            for t in $names; do
+              skip=false
+              for k in $KEEP; do [ "$t" = "$k" ] && skip=true; done
+              if $skip; then echo "keep   $t"; kept=$((kept+1)); else
+                code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+                  -H "Authorization: JWT $TOKEN" \
+                  "https://hub.docker.com/v2/repositories/${DH_USER}/${REPO}/tags/${t}/")
+                echo "delete $t -> HTTP $code"; deleted=$((deleted+1))
+              fi
+            done
+            [ "$(echo "$resp" | jq -r '.next')" = "null" ] && break
+            page=$((page+1))
+          done
+          echo "::notice::Docker Hub cleanup: $deleted supprimés, $kept conservés."
