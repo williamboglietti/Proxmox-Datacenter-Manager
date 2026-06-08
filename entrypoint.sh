@@ -86,7 +86,8 @@ else
 fi
 
 # 3b. Masquer l'onglet "Mises à jour" (les MAJ se font par image, pas par apt).
-if [[ "${DISABLE_UPDATES_TAB:-false}" == "true" ]]; then
+# Défaut "true" : un upgrade apt depuis cet onglet casserait le conteneur.
+if [[ "${DISABLE_UPDATES_TAB:-true}" == "true" ]]; then
     log "DISABLE_UPDATES_TAB=true: hiding the Updates tab."
     apply_html_patch "pdm-disable-updates-tab" "$UPDATES_PATCH"
 else
