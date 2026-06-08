@@ -65,6 +65,7 @@ Ouvrir `https://<hôte>:8443` (certificat auto-signé) et se connecter avec le r
 | `DISABLE_POWER_BUTTONS`    | `true`  | Masque les boutons « Redémarrer »/« Arrêter » (cycle de vie géré via Docker). `false` pour les réafficher. |
 | `DISABLE_SUBSCRIPTION_PANEL` | `true` | Masque l'entrée de menu « Abonnement » locale (sans intérêt ici). N'affecte pas « Subscription Registry ». `false` pour la réafficher. |
 | `DISABLE_NETWORK_EDIT`     | `true`  | Verrouille la vue « Réseau et heure » en lecture seule : retire l'édition heure/DNS et la section « Interfaces réseau » (gérés via Docker). |
+| `DISABLE_REPOSITORIES`     | `true`  | Masque l'onglet « Dépôts » et vide les sources apt (gestion des dépôts inutile : MAJ par image). `false` pour le réafficher. |
 | `TZ`                       | —       | Fuseau horaire (ex. `Europe/Paris`), appliqué à chaque démarrage. |
 
 Si `PDM_ROOT_PASSWORD` n'est pas fourni, définir le mot de passe manuellement :
@@ -119,8 +120,8 @@ docker run -d --name pdm -p 8443:8443 -e PDM_ROOT_PASSWORD=change-me pdm:local
 
 ## Releases
 
-Un workflow GitHub Actions construit l'image et la publie sur GHCR et Docker Hub à
-chaque tag `v*`. Pour publier une nouvelle version alignée sur une release PDM :
+Un tag git `vX.Y.Z` build et publie la version PDM `X.Y.Z` (GHCR + Docker Hub) ;
+`latest` et l'alias `X.Y` ne suivent que la version la plus récente.
 
 ```bash
 git tag v1.1.4
@@ -129,6 +130,50 @@ git push origin v1.1.4
 
 La publication sur Docker Hub nécessite les secrets de dépôt `DOCKERHUB_USERNAME`
 et `DOCKERHUB_TOKEN`.
+
+### Builds de versions historiques
+
+Le workflow `build-versions` (déclenché manuellement, *Actions → Build historical
+PDM versions → Run workflow*) reconstruit d'anciennes versions PDM avec les patches
+de ce dépôt. Il prend en entrée une liste de versions (par défaut toute la ligne
+`1.x`), build chacune via `--build-arg PDM_VERSION=<version>` et publie le tag exact
+(`1.0.7`, `1.1.1`, …). Les alias mobiles (`latest`, `1.0`, `1.1`) restent gérés
+exclusivement par le workflow de release ci-dessus.
+
+Le Dockerfile pinne le paquet principal `proxmox-datacenter-manager=<version>` et
+choisit automatiquement la `-ui`/`-docs` la plus haute ≤ cette version (leur
+numérotation comporte des trous : pas de `-ui` 1.1.4, pas de `-docs` 1.0.3/1.0.4).
+Pour un build local d'une version précise :
+
+```bash
+docker build --build-arg PDM_VERSION=1.0.7 -t pdm:1.0.7 .
+```
+
+## Bonus : désactiver le popup d'abonnement (bare-metal)
+
+Sans rapport avec l'image conteneur. Deux scripts, à lancer en root sur l'hôte
+concerné. Options communes : `--persist` (réapplique au démarrage et après `apt`),
+`--revert` (annule).
+
+### PDM
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/scripts/disable-pdm-popup.sh -o disable-pdm-popup.sh
+bash disable-pdm-popup.sh             # appliquer
+bash disable-pdm-popup.sh --persist
+bash disable-pdm-popup.sh --revert
+```
+
+### PVE / PBS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/scripts/disable-proxmox-popup.sh -o disable-proxmox-popup.sh
+bash disable-proxmox-popup.sh             # appliquer
+bash disable-proxmox-popup.sh --persist
+bash disable-proxmox-popup.sh --revert
+```
+
+> Non supporté par Proxmox ; relire un script avant de l'exécuter en root.
 
 ## Licence
 
@@ -206,6 +251,7 @@ realm and the configured password.
 | `DISABLE_POWER_BUTTONS`    | `true`  | Hides the "Reboot"/"Shutdown" buttons (lifecycle is managed via Docker). Set `false` to show them. |
 | `DISABLE_SUBSCRIPTION_PANEL` | `true` | Hides the local "Subscription" menu entry (pointless here). Does not affect "Subscription Registry". Set `false` to show it. |
 | `DISABLE_NETWORK_EDIT`     | `true`  | Locks the "Network & Time" view read-only: removes time/DNS editing and the "Network Interfaces" section (managed via Docker). |
+| `DISABLE_REPOSITORIES`     | `true`  | Hides the "Repositories" tab and clears apt sources (repo management is pointless: updates via image). Set `false` to show it. |
 | `TZ`                       | —       | Timezone (e.g. `Europe/Paris`), applied on every start. |
 
 If `PDM_ROOT_PASSWORD` is not provided, set the password manually:
@@ -259,8 +305,8 @@ docker run -d --name pdm -p 8443:8443 -e PDM_ROOT_PASSWORD=change-me pdm:local
 
 ### Releases
 
-A GitHub Actions workflow builds the image and publishes it to GHCR and Docker Hub
-on every `v*` tag. To publish a new version matching an upstream PDM release:
+A git tag `vX.Y.Z` builds and publishes PDM version `X.Y.Z` (GHCR + Docker Hub);
+`latest` and the `X.Y` alias only track the newest version.
 
 ```bash
 git tag v1.1.4
@@ -269,6 +315,47 @@ git push origin v1.1.4
 
 Publishing to Docker Hub requires the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`
 repository secrets.
+
+#### Building historical versions
+
+The `build-versions` workflow (manual trigger, *Actions → Build historical PDM
+versions → Run workflow*) rebuilds older PDM versions with this repo's patches. It
+takes a list of versions (default: the whole `1.x` line), builds each via
+`--build-arg PDM_VERSION=<version>` and publishes the exact tag (`1.0.7`, `1.1.1`, …).
+The moving aliases (`latest`, `1.0`, `1.1`) are owned solely by the release workflow above.
+
+The Dockerfile pins the main package `proxmox-datacenter-manager=<version>` and
+auto-selects the highest `-ui`/`-docs` ≤ that version (their versioning has gaps:
+no `-ui` 1.1.4, no `-docs` 1.0.3/1.0.4). For a local build of a specific version:
+
+```bash
+docker build --build-arg PDM_VERSION=1.0.7 -t pdm:1.0.7 .
+```
+
+### Bonus: disable the subscription popup (bare-metal)
+
+Unrelated to the container image. Two scripts, run as root on the relevant host.
+Common options: `--persist` (re-applies on boot and after `apt`), `--revert` (undo).
+
+#### PDM
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/scripts/disable-pdm-popup.sh -o disable-pdm-popup.sh
+bash disable-pdm-popup.sh             # apply
+bash disable-pdm-popup.sh --persist
+bash disable-pdm-popup.sh --revert
+```
+
+#### PVE / PBS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/scripts/disable-proxmox-popup.sh -o disable-proxmox-popup.sh
+bash disable-proxmox-popup.sh             # apply
+bash disable-proxmox-popup.sh --persist
+bash disable-proxmox-popup.sh --revert
+```
+
+> Not supported by Proxmox; review any script before running it as root.
 
 ### License
 

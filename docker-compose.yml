@@ -1,56 +1,38 @@
-# Exemple Docker Compose pour Proxmox Datacenter Manager.
-# Lancer avec : docker compose up -d
+# Proxmox Datacenter Manager — docker compose up -d
 services:
   pdm:
     image: ghcr.io/williamboglietti/proxmox-datacenter-manager:latest
-    # En développement local, commenter l'image ci-dessus et décommenter :
-    # build: .
+    # build: .                       # build local au lieu de l'image publiée
     container_name: pdm
-    hostname: pdm                   # nom du nœud affiché par PDM (sinon = ID du conteneur)
-    platform: linux/amd64           # PDM est disponible en amd64 uniquement
+    hostname: pdm                    # nom du nœud affiché par PDM
+    platform: linux/amd64            # PDM est amd64 uniquement
     restart: unless-stopped
-    # Bridge Docker par défaut (pas le réseau custom de Compose) : les DNS ci-dessous
-    # apparaissent en direct dans /etc/resolv.conf (et dans l'UI PDM) au lieu du
-    # resolver interne 127.0.0.11. Convient à ce conteneur unique.
-    network_mode: bridge
+    network_mode: bridge             # DNS de l'hôte reflétés tels quels dans l'UI
     ports:
-      - "8443:8443"                 # UI web HTTPS
-    # DNS du conteneur (sinon hérité du démon Docker). Reflété tel quel dans l'UI PDM.
-    dns:
-      - 1.1.1.1
-      # - 8.8.8.8
-      - 9.9.9.9
+      - "8443:8443"
+    # Sans dns/dns_search : hérite du resolv.conf de l'hôte. Décommenter pour forcer.
+    # dns:
+    #   - 1.1.1.1
+    #   - 9.9.9.9
     # dns_search:
     #   - lan.local
     environment:
-      # Mot de passe root@pam, (ré)appliqué à chaque démarrage. À changer.
-      PDM_ROOT_PASSWORD: "change-me"
-      # Masquer le popup "Aucun abonnement en cours de validité" (true/false).
-      DISABLE_SUBSCRIPTION_NAG: "true"
-      # Masquer l'onglet "Mises à jour" (MAJ par image, pas par apt) (true/false).
-      # Défaut "true" : un upgrade apt depuis l'UI casserait le conteneur.
-      DISABLE_UPDATES_TAB: "true"
-      # Masquer les boutons "Redémarrer"/"Arrêter" (géré via Docker) (true/false).
-      DISABLE_POWER_BUTTONS: "true"
-      # Masquer l'entrée de menu "Abonnement" locale (true/false). Ne touche pas
-      # à "Subscription Registry" (gestion des abonnements des remotes).
-      DISABLE_SUBSCRIPTION_PANEL: "true"
-      # Vue "Réseau et heure" en lecture seule : retire l'édition heure/DNS et la
-      # section Interfaces réseau (gérés via Docker) (true/false).
-      DISABLE_NETWORK_EDIT: "true"
-      # Fuseau horaire (ex: Europe/Paris), appliqué à chaque démarrage.
+      PDM_ROOT_PASSWORD: "change-me"     # root@pam, réappliqué à chaque démarrage
+      DISABLE_SUBSCRIPTION_NAG: "true"   # popup "no valid subscription"
+      DISABLE_UPDATES_TAB: "true"        # MAJ par image, pas par apt
+      DISABLE_POWER_BUTTONS: "true"      # reboot/shutdown gérés via Docker
+      DISABLE_SUBSCRIPTION_PANEL: "true" # entrée de menu "Abonnement" locale
+      DISABLE_NETWORK_EDIT: "true"       # vue Réseau/heure en lecture seule
+      DISABLE_REPOSITORIES: "true"       # masque l'onglet Dépôts + vide les sources apt
       TZ: "Europe/Paris"
-      # Port HTTPS de l'UI (laisser 8443 sauf besoin spécifique).
       # PDM_PORT: "8443"
-    # Alternative : déporter les variables ci-dessus dans un fichier .env
     # env_file:
     #   - .env
     volumes:
-      - pdm-config:/etc/proxmox-datacenter-manager   # config, certificats, clés
-      - pdm-data:/var/lib/proxmox-datacenter-manager # état, base de données
+      - pdm-config:/etc/proxmox-datacenter-manager
+      - pdm-data:/var/lib/proxmox-datacenter-manager
     tmpfs:
-      - /run:exec,mode=0755          # /run en tmpfs : évite "shmem is not on tmpfs" côté PDM
-    # L'image embarque déjà un HEALTHCHECK ; redéfini ici pour visibilité/ajustement.
+      - /run:exec,mode=0755          # évite "shmem is not on tmpfs"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "--insecure", "https://localhost:8443/api2/json/ping"]
       interval: 30s
