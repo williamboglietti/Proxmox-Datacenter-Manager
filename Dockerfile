@@ -16,8 +16,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # SHA256 attendu du keyring officiel Proxmox (vérifié au build).
 ARG PROXMOX_KEYRING_SHA256=136673be77aba35dcce385b28737689ad64fd785a797e57897589aed08db6e45
 
-# 1. Dépendances système minimales.
+# 1. Dépendances système minimales + patch sécurité de l'image de base.
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         wget \
         ca-certificates \
@@ -80,12 +81,14 @@ RUN apt-get update && \
             "proxmox-datacenter-manager-ui=$UI_VER" \
             ${DOCS_VER:+"proxmox-datacenter-manager-docs=$DOCS_VER"} ; \
     fi && \
+    # Supprime wget (utilisé uniquement pour le keyring, inutile au runtime).
+    apt-get purge -y --auto-remove wget && \
     # container-meta ajoute le dépôt enterprise : inutile sur une image
     # no-subscription (401 sur apt update) et trompeur — on le retire.
     # debian.sources : inutile au runtime (aucune MAJ par apt).
     rm -f /etc/apt/sources.list.d/pdm-enterprise.sources \
           /etc/apt/sources.list.d/debian.sources && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* /var/log/apt/* /var/log/dpkg.log /tmp/*
 
 # 5. Dossiers runtime et de persistance.
 RUN mkdir -p \
