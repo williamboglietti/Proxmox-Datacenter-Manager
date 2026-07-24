@@ -1,5 +1,5 @@
 <div align="center">
-<img src=".github/banner.png" alt="Proxmox Datacenter Manager" width="100%" />
+<img src="https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/.github/banner.png" alt="Proxmox Datacenter Manager" width="100%" />
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/williamboglietti/proxmox-datacenter-manager?style=flat&logo=docker&label=Docker%20Pulls)](https://hub.docker.com/r/williamboglietti/proxmox-datacenter-manager) [![Stars](https://img.shields.io/github/stars/williamboglietti/proxmox-datacenter-manager?style=flat&logo=github&label=Stars)](https://github.com/williamboglietti/proxmox-datacenter-manager) [![Release](https://img.shields.io/github/v/release/williamboglietti/proxmox-datacenter-manager?style=flat&logo=github&label=Release)](https://github.com/williamboglietti/proxmox-datacenter-manager/releases) [![License](https://img.shields.io/github/license/williamboglietti/proxmox-datacenter-manager?style=flat&label=License)](https://github.com/williamboglietti/proxmox-datacenter-manager/blob/main/LICENSE) [![Build](https://img.shields.io/github/actions/workflow/status/williamboglietti/proxmox-datacenter-manager/docker-publish.yml?style=flat&logo=githubactions&label=Build)](https://github.com/williamboglietti/proxmox-datacenter-manager/actions)
 
@@ -11,7 +11,7 @@ Manage multiple PVE clusters from a single web UI — no dedicated VM needed.
 
 ---
 
-<!-- Add a screenshot of your PDM dashboard here: ![PDM Dashboard](.github/screenshot.png) -->
+<!-- Add a screenshot of your PDM dashboard here: ![PDM Dashboard](https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/.github/screenshot.png) -->
 
 ## ✨ Features
 

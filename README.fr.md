@@ -1,5 +1,5 @@
 <div align="center">
-<img src=".github/banner.png" alt="Proxmox Datacenter Manager" width="100%" />
+<img src="https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/.github/banner.png" alt="Proxmox Datacenter Manager" width="100%" />
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/williamboglietti/proxmox-datacenter-manager?style=flat&logo=docker&label=Docker%20Pulls)](https://hub.docker.com/r/williamboglietti/proxmox-datacenter-manager)
 [![Stars](https://img.shields.io/github/stars/williamboglietti/proxmox-datacenter-manager?style=flat&logo=github&label=Stars)](https://github.com/williamboglietti/proxmox-datacenter-manager)
@@ -15,7 +15,7 @@ Gérez plusieurs clusters PVE depuis une seule interface web — sans VM dédié
 
 ---
 
-<!-- Ajoutez une capture d'écran de votre dashboard PDM ici : ![Dashboard PDM](.github/screenshot.png) -->
+<!-- Ajoutez une capture d'écran de votre dashboard PDM ici : ![Dashboard PDM](https://raw.githubusercontent.com/williamboglietti/proxmox-datacenter-manager/main/.github/screenshot.png) -->
 
 ## ✨ Fonctionnalités
 
