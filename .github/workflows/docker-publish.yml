@@ -95,6 +95,7 @@ jobs:
           TAGS="$PDM_VER"
           [ "$PDM_VER" = "$HIGHEST_MM" ] && TAGS="$TAGS $PDM_MM"
           [ "$PDM_VER" = "$HIGHEST" ]    && TAGS="$TAGS latest"
+          echo "pdm=$PDM_VER" >> "$GITHUB_OUTPUT"
           echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
           echo "Version $PDM_VER -> tags : $TAGS"
 
@@ -113,23 +114,25 @@ jobs:
           done
 
       - name: GitHub Release
-        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
           GHCR: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           DH: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          PDM: ${{ steps.ver.outputs.pdm }}
           TAGS: ${{ steps.ver.outputs.tags }}
         run: |
           set -euo pipefail
-          V=${GITHUB_REF_NAME#v}
+          V="$PDM"
+          TAG="v$V"
           # « Latest » sur GitHub seulement pour la version la plus récente
           # (le tag d'image `latest` n'est poussé que pour celle-ci).
           LATEST=false; echo "$TAGS" | grep -qw latest && LATEST=true
           NOTES=$(printf 'Image conteneur Proxmox Datacenter Manager %s (amd64).\n\n```bash\ndocker pull %s:%s\ndocker pull %s:%s\n```' "$V" "$GHCR" "$V" "$DH" "$V")
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release edit "$GITHUB_REF_NAME" --title "PDM $V" --notes "$NOTES" --latest=$LATEST
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "PDM $V" --notes "$NOTES" --latest=$LATEST
           else
-            gh release create "$GITHUB_REF_NAME" --title "PDM $V" --notes "$NOTES" --latest=$LATEST
+            gh release create "$TAG" --target "$GITHUB_SHA" \
+              --title "PDM $V" --notes "$NOTES" --latest=$LATEST
           fi
 
       # La description Docker Hub est synchronisée par le workflow dédié
