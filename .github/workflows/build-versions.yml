@@ -128,4 +128,4 @@ jobs:
           fi
           NOTES=$(printf 'Image conteneur Proxmox Datacenter Manager %s (amd64).\n\n```bash\ndocker pull %s:%s\ndocker pull %s:%s\n```' "$V" "$GHCR" "$V" "$DH" "$V")
           gh release create "$TAG" --target "$GITHUB_SHA" \
-            --title "PDM $V" --notes "$NOTES" --latest=false
+            --title "$TAG" --notes "$NOTES" --latest=false

@@ -129,10 +129,10 @@ jobs:
           LATEST=false; echo "$TAGS" | grep -qw latest && LATEST=true
           NOTES=$(printf 'Image conteneur Proxmox Datacenter Manager %s (amd64).\n\n```bash\ndocker pull %s:%s\ndocker pull %s:%s\n```' "$V" "$GHCR" "$V" "$DH" "$V")
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --title "PDM $V" --notes "$NOTES" --latest=$LATEST
+            gh release edit "$TAG" --title "$TAG" --notes "$NOTES" --latest=$LATEST
           else
             gh release create "$TAG" --target "$GITHUB_SHA" \
-              --title "PDM $V" --notes "$NOTES" --latest=$LATEST
+              --title "$TAG" --notes "$NOTES" --latest=$LATEST
           fi
 
       # La description Docker Hub est synchronisée par le workflow dédié
