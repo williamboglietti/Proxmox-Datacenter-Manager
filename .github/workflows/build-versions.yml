@@ -2,8 +2,9 @@ name: Build historical PDM versions
 
 # Build reproductible d'anciennes versions PDM avec nos patches conteneur.
 # Déclenché manuellement ou par l'auto-update. Chaque version est buildée via
-# --build-arg PDM_VERSION et publiée avec son tag exact X.Y.Z. Ne touche pas aux
-# alias mobiles `latest` et X.Y, qui restent gérés par docker-publish.yml.
+# --build-arg PDM_VERSION, publiée avec son tag exact X.Y.Z et exposée comme
+# GitHub Release. Ne touche pas aux alias mobiles `latest` et X.Y, qui restent
+# gérés par docker-publish.yml.
 
 on:
   workflow_call:
@@ -42,7 +43,7 @@ jobs:
     needs: prep
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     strategy:
       fail-fast: false
@@ -111,3 +112,20 @@ jobs:
               docker push "$reg:$t"
             done
           done
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GHCR: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          DH: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          V: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+          TAG="v$V"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG déjà présente."
+            exit 0
+          fi
+          NOTES=$(printf 'Image conteneur Proxmox Datacenter Manager %s (amd64).\n\n```bash\ndocker pull %s:%s\ndocker pull %s:%s\n```' "$V" "$GHCR" "$V" "$DH" "$V")
+          gh release create "$TAG" --target "$GITHUB_SHA" \
+            --title "PDM $V" --notes "$NOTES" --latest=false

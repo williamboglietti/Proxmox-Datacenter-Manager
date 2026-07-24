@@ -107,7 +107,7 @@ jobs:
     needs: check
     if: needs.check.outputs.has_missing_versions == 'true'
     permissions:
-      contents: read
+      contents: write # Le workflow appelé crée les releases exactes manquantes.
       packages: write
     uses: ./.github/workflows/build-versions.yml
     with:
