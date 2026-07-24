@@ -21,4 +21,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ secrets.DOCKERHUB_USERNAME }}/proxmox-datacenter-manager
           readme-filepath: ./README.md
-          short-description: "Containerized Proxmox Datacenter Manager — amd64, no systemd, hardened UI"
+          short-description: "Proxmox Datacenter Manager in Docker — manage multiple PVE clusters from one web UI"

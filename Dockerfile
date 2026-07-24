@@ -3,8 +3,11 @@
 FROM debian:trixie-slim
 
 LABEL org.opencontainers.image.title="Proxmox Datacenter Manager"
-LABEL org.opencontainers.image.description="Containerized Proxmox Datacenter Manager (PDM) - amd64, no systemd"
+LABEL org.opencontainers.image.description="Proxmox Datacenter Manager in Docker — manage multiple PVE clusters from a single web UI. No systemd, hardened UI, auto-updates."
 LABEL org.opencontainers.image.source="https://github.com/williamboglietti/proxmox-datacenter-manager"
+LABEL org.opencontainers.image.documentation="https://github.com/williamboglietti/proxmox-datacenter-manager#readme"
+LABEL org.opencontainers.image.url="https://hub.docker.com/r/williamboglietti/proxmox-datacenter-manager"
+LABEL org.opencontainers.image.vendor="williamboglietti"
 LABEL org.opencontainers.image.licenses="MIT"
 
 ENV DEBIAN_FRONTEND=noninteractive \
