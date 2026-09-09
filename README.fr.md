@@ -22,7 +22,7 @@ Gérez plusieurs clusters PVE depuis une seule interface web, sans VM dédiée.
 - **Interface PDM complète:** l'interface web intégrale de Proxmox Datacenter Manager, servie en HTTPS sur le port 8443.
 - **Adaptée pour Docker:** le popup d'abonnement, les boutons d'alimentation, l'onglet mises à jour, l'édition réseau et l'onglet dépôts sont masqués par défaut (tous configurables via variables d'environnement). Le cycle de vie du conteneur est géré par Docker, pas par l'UI.
 - **Mises à jour automatiques:** un workflow GitHub Actions hebdomadaire détecte les nouvelles versions PDM en amont et reconstruit l'image automatiquement.
-- **Builds versionnés:** chaque tag d'image correspond à la version PDM embarquée (ex. `1.1.4`). Construisez n'importe quelle version historique avec `--build-arg PDM_VERSION=x.y.z`.
+- **Builds versionnés:** chaque tag d'image correspond à la version PDM embarquée (ex. `1.1.7`). Construisez n'importe quelle version historique avec `--build-arg PDM_VERSION=x.y.z`.
 - **Healthcheck intégré:** l'endpoint API `/api2/json/ping` est surveillé nativement.
 - **Sans systemd:** exécute deux daemons légers sous `tini`, comme une installation native mais sans overhead d'init system.
 
@@ -33,7 +33,7 @@ Gérez plusieurs clusters PVE depuis une seule interface web, sans VM dédiée.
 | Docker Hub | `docker pull williamboglietti/proxmox-datacenter-manager` |
 | GHCR | `docker pull ghcr.io/williamboglietti/proxmox-datacenter-manager` |
 
-Les tags suivent la version PDM amont : `latest`, `1.1`, `1.1.4`.
+Les tags suivent la version PDM amont : `latest`, `1.1`, `1.1.7`.
 
 > **Architecture :** `linux/amd64` uniquement. Proxmox ne publie pas de paquets PDM pour arm64.
 
@@ -133,7 +133,7 @@ docker build --build-arg PDM_VERSION=1.0.7 -t pdm:1.0.7 .
 Un tag git `vX.Y.Z` build et publie la version PDM `X.Y.Z` sur GHCR et Docker Hub. `latest` et l'alias `X.Y` ne suivent que la version la plus récente.
 
 ```bash
-git tag v1.1.4 && git push origin v1.1.4
+git tag v1.1.7 && git push origin v1.1.7
 ```
 
 Le workflow `build-versions` (déclenchement manuel via *Actions -> Build historical PDM versions*) reconstruit les anciennes versions. Le Dockerfile pinne `proxmox-datacenter-manager=<version>` et choisit automatiquement les paquets `-ui`/`-docs` correspondants.

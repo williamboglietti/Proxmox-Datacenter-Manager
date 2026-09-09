@@ -18,7 +18,7 @@ Manage multiple PVE clusters from a single web UI, no dedicated VM needed.
 - **Full PDM web UI:** the complete Proxmox Datacenter Manager interface, served over HTTPS on port 8443.
 - **Hardened for Docker:** subscription popup, power buttons, updates tab, network editing, and repositories tab are hidden by default (all toggleable via env vars). The container lifecycle is managed by Docker, not the UI.
 - **Automated updates:** a weekly GitHub Actions workflow detects new upstream PDM releases and rebuilds the image automatically.
-- **Version-pinned builds:** every image tag matches the bundled PDM version (e.g. `1.1.4`). Build any historical version with `--build-arg PDM_VERSION=x.y.z`.
+- **Version-pinned builds:** every image tag matches the bundled PDM version (e.g. `1.1.7`). Build any historical version with `--build-arg PDM_VERSION=x.y.z`.
 - **Built-in healthcheck:** the API endpoint `/api2/json/ping` is monitored out of the box.
 - **No systemd:** runs two lightweight daemons under `tini`, just like a native install but without init system overhead.
 
@@ -29,7 +29,7 @@ Manage multiple PVE clusters from a single web UI, no dedicated VM needed.
 | Docker Hub | `docker pull williamboglietti/proxmox-datacenter-manager` |
 | GHCR | `docker pull ghcr.io/williamboglietti/proxmox-datacenter-manager` |
 
-Tags follow the upstream PDM version: `latest`, `1.1`, `1.1.4`.
+Tags follow the upstream PDM version: `latest`, `1.1`, `1.1.7`.
 
 > **Architecture:** `linux/amd64` only. Proxmox does not publish PDM packages for arm64.
 
@@ -129,7 +129,7 @@ docker build --build-arg PDM_VERSION=1.0.7 -t pdm:1.0.7 .
 A git tag `vX.Y.Z` builds and publishes PDM version `X.Y.Z` to GHCR and Docker Hub. `latest` and `X.Y` aliases track the newest version only.
 
 ```bash
-git tag v1.1.4 && git push origin v1.1.4
+git tag v1.1.7 && git push origin v1.1.7
 ```
 
 The `build-versions` workflow (manual trigger via *Actions -> Build historical PDM versions*) rebuilds older versions. The Dockerfile pins `proxmox-datacenter-manager=<version>` and auto-selects the matching `-ui`/`-docs` packages.
