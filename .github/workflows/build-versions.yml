@@ -87,7 +87,18 @@ jobs:
           version: v0.75.0
           cache: false
 
-      - name: Bloquer les vulnérabilités HIGH/CRITICAL corrigibles avant publication
+      - name: Signaler les vulnérabilités MEDIUM/LOW (amd64)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: pdm-ci:build
+          scan-type: image
+          scanners: vuln
+          vuln-type: os,library
+          severity: MEDIUM,LOW
+          exit-code: '0'
+          skip-setup-trivy: true
+
+      - name: Bloquer les vulnérabilités HIGH/CRITICAL (amd64), corrigées ou non
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: pdm-ci:build
@@ -95,7 +106,6 @@ jobs:
           scanners: vuln
           vuln-type: os,library
           severity: HIGH,CRITICAL
-          ignore-unfixed: true
           exit-code: '1'
           skip-setup-trivy: true
 
