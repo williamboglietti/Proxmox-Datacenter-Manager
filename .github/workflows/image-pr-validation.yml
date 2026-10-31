@@ -1,0 +1,63 @@
+name: Validate PDM image security
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-pr-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate-image:
+    # PDM is public: use a standard free GitHub-hosted runner for PR code.
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build amd64 image locally (no registry write)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: pdm-ci:pr
+
+      - name: Installer Trivy
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.75.0
+          cache: false
+
+      - name: Signaler les vulnérabilités MEDIUM/LOW (amd64)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: pdm-ci:pr
+          scan-type: image
+          scanners: vuln
+          vuln-type: os,library
+          severity: MEDIUM,LOW
+          exit-code: '0'
+          skip-setup-trivy: true
+
+      - name: Bloquer les vulnérabilités HIGH/CRITICAL (amd64), corrigées ou non
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: pdm-ci:pr
+          scan-type: image
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          skip-setup-trivy: true
