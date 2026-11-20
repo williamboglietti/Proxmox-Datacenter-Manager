@@ -1,11 +1,12 @@
 name: Auto-update PDM image
 
-# Hebdomadaire : publie chaque version PDM exacte absente de GHCR, puis remet
-# `latest` et l'alias minor sur la dernière version disponible si nécessaire.
+# Vérifie les versions toutes les heures et reconstruit aussi chaque semaine
+# l'image courante pour intégrer les mises à jour des paquets Debian.
 
 on:
   schedule:
-    - cron: "0 6 * * 1" # tous les lundis à 06:00 UTC
+    - cron: "17 * * * *" # toutes les heures, hors début d'heure
+    - cron: "37 6 * * 1" # chaque lundi à 06:37 UTC : rebuild Debian
   workflow_dispatch:
 
 jobs:
@@ -116,7 +117,7 @@ jobs:
 
   publish-latest:
     needs: check
-    if: needs.check.outputs.needs_latest == 'true'
+    if: needs.check.outputs.needs_latest == 'true' || github.event.schedule == '37 6 * * 1'
     permissions:
       contents: write # Le workflow appelé ne peut pas élever les permissions du caller.
       packages: write
