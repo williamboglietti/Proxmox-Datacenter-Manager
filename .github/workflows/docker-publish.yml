@@ -11,7 +11,7 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
-  workflow_call: # appelé par auto-update.yml quand une nouvelle version PDM sort
+  workflow_call: # appelé pour une nouvelle version ou le rebuild hebdomadaire
 
 env:
   IMAGE_NAME: proxmox-datacenter-manager
@@ -47,11 +47,11 @@ jobs:
           context: .
           platforms: linux/amd64
           load: true
+          pull: true
+          no-cache: true
           tags: pdm-ci:build
           build-args: |
             PDM_VERSION=${{ steps.target.outputs.pdm_version }}
-          cache-from: type=gha,scope=${{ steps.target.outputs.pdm_version }}
-          cache-to: type=gha,mode=max,scope=${{ steps.target.outputs.pdm_version }}
 
       - name: Derive image tags from the installed PDM version
         id: ver

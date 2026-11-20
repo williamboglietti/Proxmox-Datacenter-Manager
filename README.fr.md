@@ -21,7 +21,7 @@ Gérez plusieurs clusters PVE depuis une seule interface web, sans VM dédiée.
 
 - **Interface PDM complète:** l'interface web intégrale de Proxmox Datacenter Manager, servie en HTTPS sur le port 8443.
 - **Adaptée pour Docker:** le popup d'abonnement, les boutons d'alimentation, l'onglet mises à jour, l'édition réseau et l'onglet dépôts sont masqués par défaut (tous configurables via variables d'environnement). Le cycle de vie du conteneur est géré par Docker, pas par l'UI.
-- **Mises à jour automatiques:** un workflow GitHub Actions hebdomadaire détecte les nouvelles versions PDM en amont et reconstruit l'image automatiquement.
+- **Mises à jour automatiques:** GitHub Actions recherche les nouvelles versions PDM toutes les heures et reconstruit l'image chaque semaine pour intégrer les mises à jour Debian.
 - **Builds versionnés:** chaque tag d'image correspond à la version PDM embarquée (ex. `1.1.7`). Construisez n'importe quelle version historique avec `--build-arg PDM_VERSION=x.y.z`.
 - **Healthcheck intégré:** l'endpoint API `/api2/json/ping` est surveillé nativement.
 - **Sans systemd:** exécute deux daemons légers sous `tini`, comme une installation native mais sans overhead d'init system.
@@ -106,7 +106,7 @@ PDM se met à jour **en changeant d'image**, pas via `apt` dans le conteneur. Un
 docker compose pull && docker compose up -d
 ```
 
-Les images sont republiées automatiquement quand une nouvelle version de PDM sort (workflow `auto-update`, hebdomadaire). Le timer apt quotidien de PDM est inerte dans le conteneur (aucun systemd/cron n'y tourne).
+Le workflow `auto-update` recherche les nouvelles versions PDM toutes les heures et reconstruit chaque semaine l'image courante pour intégrer les mises à jour des paquets Debian. Les images ne sont publiées qu'après succès du scan de sécurité. Le timer apt quotidien de PDM est inerte dans le conteneur (aucun systemd/cron n'y tourne).
 
 ## Architecture
 
