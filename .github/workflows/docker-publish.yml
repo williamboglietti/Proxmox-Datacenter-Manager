@@ -10,8 +10,6 @@ on:
   push:
     tags:
       - "v*"
-  pull_request:
-    branches: [main]
   workflow_dispatch:
   workflow_call: # appelé pour une nouvelle version ou le rebuild hebdomadaire
 

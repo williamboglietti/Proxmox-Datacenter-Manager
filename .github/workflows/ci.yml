@@ -1,0 +1,117 @@
+name: Pull request CI
+
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      docs_only: ${{ steps.diff.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Vérifier le diff et la documentation
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: python3 .github/scripts/classify_changes.py "$BASE_SHA" HEAD >> "$GITHUB_OUTPUT"
+
+  image:
+    needs: changes
+    if: needs.changes.outputs.docs_only == 'false'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Vérifier les scripts et Docker Compose
+        run: |
+          python3 .github/scripts/test_classify_changes.py
+          for script in entrypoint.sh scripts/*.sh; do
+            bash -n "$script"
+          done
+          docker compose config --quiet
+
+      - name: Préparer Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Construire et charger l’image amd64
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          pull: true
+          no-cache: true
+          tags: pdm-ci:pr
+
+      - name: Vérifier le démarrage de PDM
+        run: |
+          container=$(docker run --detach --tmpfs /run:exec,mode=0755 \
+            --env PDM_ROOT_PASSWORD="$(openssl rand -hex 24)" pdm-ci:pr)
+          trap 'docker rm -fv "$container" >/dev/null' EXIT
+          for attempt in {1..30}; do
+            if docker exec "$container" curl -fksS --max-time 3 \
+                https://localhost:8443/api2/json/ping >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs "$container"
+          exit 1
+
+      - name: Installer Trivy
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: v0.75.0
+          cache: false
+
+      - name: Signaler tous les HIGH et CRITICAL
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: pdm-ci:pr
+          scan-type: image
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          exit-code: '0'
+          skip-setup-trivy: true
+
+      - name: Bloquer les HIGH et CRITICAL corrigibles
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: pdm-ci:pr
+          scan-type: image
+          scanners: vuln
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          skip-setup-trivy: true
+
+  complete:
+    name: CI complete
+    needs: [changes, image]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Vérifier que les contrôles requis ont abouti
+        env:
+          CHANGES: ${{ needs.changes.result }}
+          DOCS_ONLY: ${{ needs.changes.outputs.docs_only }}
+          IMAGE: ${{ needs.image.result }}
+        run: |
+          [[ "$CHANGES" == success ]] &&
+          { [[ "$DOCS_ONLY" == true && "$IMAGE" == skipped ]] ||
+            [[ "$DOCS_ONLY" == false && "$IMAGE" == success ]]; }
