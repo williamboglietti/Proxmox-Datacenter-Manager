@@ -53,7 +53,14 @@ fi
 # PDM impose un owner/mode strict sur ces dossiers (vérifié par `setup`).
 RUN_DIR="$(dirname "$PRIV_SOCK")"
 mkdir -p "$CONFIG_DIR" "$DATA_DIR" "$LOG_DIR" "$RUN_DIR"
-chown www-data:www-data "$CONFIG_DIR"
+# Depuis PDM 1.1.9, setup exige root pour empêcher le remplacement
+# des sous-répertoires privilégiés. Les versions précédentes exigent www-data.
+PDM_PACKAGE_VERSION="$(dpkg-query -W -f='${Version}' proxmox-datacenter-manager)"
+CONFIG_OWNER=www-data
+if dpkg --compare-versions "$PDM_PACKAGE_VERSION" ge 1.1.9; then
+    CONFIG_OWNER=root
+fi
+chown "$CONFIG_OWNER:www-data" "$CONFIG_DIR"
 chmod 1770 "$CONFIG_DIR"
 chown root:www-data "$RUN_DIR"
 chmod 1770 "$RUN_DIR"
