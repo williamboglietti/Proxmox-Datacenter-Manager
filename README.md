@@ -17,7 +17,7 @@ Manage multiple PVE clusters from a single web UI, no dedicated VM needed.
 
 - **Full PDM web UI:** the complete Proxmox Datacenter Manager interface, served over HTTPS on port 8443.
 - **Hardened for Docker:** subscription popup, power buttons, updates tab, network editing, and repositories tab are hidden by default (all toggleable via env vars). The container lifecycle is managed by Docker, not the UI.
-- **Automated updates:** a weekly GitHub Actions workflow detects new upstream PDM releases and rebuilds the image automatically.
+- **Automated updates:** GitHub Actions checks for upstream PDM releases hourly and rebuilds the image weekly to pick up Debian updates.
 - **Version-pinned builds:** every image tag matches the bundled PDM version (e.g. `1.1.7`). Build any historical version with `--build-arg PDM_VERSION=x.y.z`.
 - **Built-in healthcheck:** the API endpoint `/api2/json/ping` is monitored out of the box.
 - **No systemd:** runs two lightweight daemons under `tini`, just like a native install but without init system overhead.
@@ -102,7 +102,7 @@ PDM is updated **by swapping the image**, not via `apt` inside the container. An
 docker compose pull && docker compose up -d
 ```
 
-Images are republished automatically when a new PDM version ships (weekly `auto-update` workflow). PDM's daily apt timer is inert in the container (no systemd/cron runs).
+The `auto-update` workflow checks hourly for new PDM versions and rebuilds the current image weekly to pick up Debian package updates. Images are published only after the security scan passes. PDM's daily apt timer is inert in the container (no systemd/cron runs).
 
 ## Architecture
 
