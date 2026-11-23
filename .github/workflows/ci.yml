@@ -2,7 +2,7 @@ name: Pull request CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [dev, main]
   merge_group:
 
 permissions:
@@ -58,7 +58,7 @@ jobs:
 
       - name: Vérifier le démarrage de PDM
         run: |
-          container=$(docker run --detach --tmpfs /run:exec,mode=0755 \
+          container=$(docker run --detach --hostname pdm-ci.test --tmpfs /run:exec,mode=0755 \
             --env PDM_ROOT_PASSWORD="$(openssl rand -hex 24)" pdm-ci:pr)
           trap 'docker rm -fv "$container" >/dev/null' EXIT
           for attempt in {1..30}; do
