@@ -2,7 +2,7 @@ name: Pull request CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [dev, main]
   merge_group:
 
 permissions:
